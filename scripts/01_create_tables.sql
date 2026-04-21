@@ -1,0 +1,233 @@
+-- =====================================================
+-- Sistema de Gestão de Resíduos e Reciclagem
+-- Script de Criação das Tabelas
+-- Oracle SQL
+-- =====================================================
+
+-- Limpar tabelas existentes (se houver)
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE NOTIFICACAO CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE COLETA CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE RESIDUO_DESCARTADO CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE CONTAINER CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE TIPO_RESIDUO CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+-- Limpar sequências (se houver)
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE SEQ_TIPO_RESIDUO';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE SEQ_CONTAINER';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE SEQ_RESIDUO_DESCARTADO';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE SEQ_COLETA';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE SEQ_NOTIFICACAO';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+-- =====================================================
+-- Tabela: TIPO_RESIDUO
+-- Descrição: Armazena os tipos de resíduos
+-- =====================================================
+CREATE TABLE TIPO_RESIDUO (
+    ID_TIPO_RESIDUO     NUMBER(10)      PRIMARY KEY,
+    NOME                VARCHAR2(50)    NOT NULL UNIQUE,
+    DESCRICAO           VARCHAR2(200),
+    COR_IDENTIFICACAO   VARCHAR2(20),
+    IMPACTO_AMBIENTAL   VARCHAR2(10)    CHECK (IMPACTO_AMBIENTAL IN ('ALTO', 'MEDIO', 'BAIXO')),
+    DATA_CADASTRO       DATE            DEFAULT SYSDATE NOT NULL
+);
+
+-- =====================================================
+-- Tabela: CONTAINER
+-- Descrição: Containers de coleta de resíduos
+-- =====================================================
+CREATE TABLE CONTAINER (
+    ID_CONTAINER        NUMBER(10)      PRIMARY KEY,
+    ID_TIPO_RESIDUO     NUMBER(10)      NOT NULL,
+    LOCALIZACAO         VARCHAR2(200)   NOT NULL,
+    CAPACIDADE_MAXIMA   NUMBER(10,2)    NOT NULL CHECK (CAPACIDADE_MAXIMA > 0),
+    CAPACIDADE_ATUAL    NUMBER(10,2)    DEFAULT 0 CHECK (CAPACIDADE_ATUAL >= 0),
+    PERCENTUAL_OCUPACAO NUMBER(5,2)     DEFAULT 0,
+    STATUS              VARCHAR2(20)    DEFAULT 'ATIVO' CHECK (STATUS IN ('ATIVO', 'INATIVO', 'MANUTENCAO', 'CHEIO')),
+    DATA_INSTALACAO     DATE            DEFAULT SYSDATE NOT NULL,
+    ULTIMA_COLETA       DATE,
+    CONSTRAINT FK_CONTAINER_TIPO 
+        FOREIGN KEY (ID_TIPO_RESIDUO) 
+        REFERENCES TIPO_RESIDUO(ID_TIPO_RESIDUO),
+    CONSTRAINT CHK_CAPACIDADE 
+        CHECK (CAPACIDADE_ATUAL <= CAPACIDADE_MAXIMA)
+);
+
+-- =====================================================
+-- Tabela: RESIDUO_DESCARTADO
+-- Descrição: Registros de descartes realizados
+-- =====================================================
+CREATE TABLE RESIDUO_DESCARTADO (
+    ID_DESCARTE         NUMBER(10)      PRIMARY KEY,
+    ID_CONTAINER        NUMBER(10)      NOT NULL,
+    ID_TIPO_RESIDUO     NUMBER(10)      NOT NULL,
+    PESO_KG             NUMBER(10,2)    NOT NULL CHECK (PESO_KG > 0),
+    DATA_DESCARTE       DATE            DEFAULT SYSDATE NOT NULL,
+    DESCARTE_CORRETO    CHAR(1)         DEFAULT 'S' CHECK (DESCARTE_CORRETO IN ('S', 'N')),
+    OBSERVACAO          VARCHAR2(200),
+    CONSTRAINT FK_DESCARTE_CONTAINER 
+        FOREIGN KEY (ID_CONTAINER) 
+        REFERENCES CONTAINER(ID_CONTAINER),
+    CONSTRAINT FK_DESCARTE_TIPO 
+        FOREIGN KEY (ID_TIPO_RESIDUO) 
+        REFERENCES TIPO_RESIDUO(ID_TIPO_RESIDUO)
+);
+
+-- =====================================================
+-- Tabela: COLETA
+-- Descrição: Registro das coletas realizadas
+-- =====================================================
+CREATE TABLE COLETA (
+    ID_COLETA           NUMBER(10)      PRIMARY KEY,
+    ID_CONTAINER        NUMBER(10)      NOT NULL,
+    DATA_COLETA         DATE,
+    PESO_COLETADO       NUMBER(10,2)    CHECK (PESO_COLETADO >= 0),
+    EMPRESA_RESPONSAVEL VARCHAR2(100),
+    STATUS_COLETA       VARCHAR2(20)    DEFAULT 'AGENDADA' CHECK (STATUS_COLETA IN ('AGENDADA', 'REALIZADA', 'CANCELADA')),
+    DESTINO_FINAL       VARCHAR2(200),
+    DATA_AGENDAMENTO    DATE            DEFAULT SYSDATE NOT NULL,
+    OBSERVACAO          VARCHAR2(200),
+    CONSTRAINT FK_COLETA_CONTAINER 
+        FOREIGN KEY (ID_CONTAINER) 
+        REFERENCES CONTAINER(ID_CONTAINER)
+);
+
+-- =====================================================
+-- Tabela: NOTIFICACAO
+-- Descrição: Notificações e alertas do sistema
+-- =====================================================
+CREATE TABLE NOTIFICACAO (
+    ID_NOTIFICACAO      NUMBER(10)      PRIMARY KEY,
+    ID_CONTAINER        NUMBER(10),
+    TIPO_NOTIFICACAO    VARCHAR2(50)    NOT NULL,
+    MENSAGEM            VARCHAR2(500)   NOT NULL,
+    DATA_GERACAO        DATE            DEFAULT SYSDATE NOT NULL,
+    PRIORIDADE          VARCHAR2(10)    DEFAULT 'MEDIA' CHECK (PRIORIDADE IN ('ALTA', 'MEDIA', 'BAIXA')),
+    STATUS              VARCHAR2(20)    DEFAULT 'PENDENTE' CHECK (STATUS IN ('PENDENTE', 'VISUALIZADA', 'RESOLVIDA')),
+    DATA_RESOLUCAO      DATE,
+    CONSTRAINT FK_NOTIFICACAO_CONTAINER 
+        FOREIGN KEY (ID_CONTAINER) 
+        REFERENCES CONTAINER(ID_CONTAINER)
+);
+
+-- =====================================================
+-- Criação de Sequências para IDs
+-- =====================================================
+CREATE SEQUENCE SEQ_TIPO_RESIDUO
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+CREATE SEQUENCE SEQ_CONTAINER
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+CREATE SEQUENCE SEQ_RESIDUO_DESCARTADO
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+CREATE SEQUENCE SEQ_COLETA
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+CREATE SEQUENCE SEQ_NOTIFICACAO
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+-- =====================================================
+-- Índices para melhorar performance
+-- =====================================================
+CREATE INDEX IDX_CONTAINER_TIPO ON CONTAINER(ID_TIPO_RESIDUO);
+CREATE INDEX IDX_CONTAINER_STATUS ON CONTAINER(STATUS);
+CREATE INDEX IDX_DESCARTE_CONTAINER ON RESIDUO_DESCARTADO(ID_CONTAINER);
+CREATE INDEX IDX_DESCARTE_DATA ON RESIDUO_DESCARTADO(DATA_DESCARTE);
+CREATE INDEX IDX_COLETA_CONTAINER ON COLETA(ID_CONTAINER);
+CREATE INDEX IDX_COLETA_STATUS ON COLETA(STATUS_COLETA);
+CREATE INDEX IDX_NOTIFICACAO_STATUS ON NOTIFICACAO(STATUS);
+CREATE INDEX IDX_NOTIFICACAO_PRIORIDADE ON NOTIFICACAO(PRIORIDADE);
+
+-- =====================================================
+-- Comentários nas tabelas
+-- =====================================================
+COMMENT ON TABLE TIPO_RESIDUO IS 'Tipos de resíduos para coleta seletiva';
+COMMENT ON TABLE CONTAINER IS 'Containers físicos instalados para coleta';
+COMMENT ON TABLE RESIDUO_DESCARTADO IS 'Registro de cada descarte realizado';
+COMMENT ON TABLE COLETA IS 'Registro das coletas realizadas';
+COMMENT ON TABLE NOTIFICACAO IS 'Alertas e notificações do sistema';
+
+-- Mensagem de sucesso
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('===================================================');
+    DBMS_OUTPUT.PUT_LINE('Tabelas criadas com sucesso!');
+    DBMS_OUTPUT.PUT_LINE('5 tabelas: TIPO_RESIDUO, CONTAINER, RESIDUO_DESCARTADO, COLETA, NOTIFICACAO');
+    DBMS_OUTPUT.PUT_LINE('5 sequências criadas para geração de IDs');
+    DBMS_OUTPUT.PUT_LINE('8 índices criados para otimização');
+    DBMS_OUTPUT.PUT_LINE('===================================================');
+END;
+/

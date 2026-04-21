@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  oracle-db-prod:
+    image: container-registry.oracle.com/database/express:21.3.0-xe
+    container_name: oracle-xe-prod
+    environment:
+      - ORACLE_PWD=${ORACLE_PWD_PROD:?Variavel ORACLE_PWD_PROD e obrigatoria}
+      - ORACLE_CHARACTERSET=AL32UTF8
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle-data-prod:/opt/oracle/oradata
+      - ./scripts:/docker-entrypoint-initdb.d/startup
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/${ORACLE_PWD_PROD}@//localhost:1521/XE", "@/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - residuos-prod-network
+
+  api-prod:
+    build: .
+    container_name: gestao-residuos-api-prod
+    depends_on:
+      oracle-db-prod:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db-prod:1521:XE
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME_PROD:?Variavel DB_USERNAME_PROD e obrigatoria}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD_PROD:?Variavel DB_PASSWORD_PROD e obrigatoria}
+      - JWT_SECRET=${JWT_SECRET_PROD:?Variavel JWT_SECRET_PROD e obrigatoria}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - SPRING_PROFILES_ACTIVE=prod
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - residuos-prod-network
+
+volumes:
+  oracle-data-prod:
+
+networks:
+  residuos-prod-network:
+    driver: bridge

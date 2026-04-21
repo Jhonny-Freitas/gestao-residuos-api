@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  oracle-db:
+    image: container-registry.oracle.com/database/express:21.3.0-xe
+    container_name: oracle-xe
+    environment:
+      - ORACLE_PWD=${ORACLE_PWD:-oracle}
+      - ORACLE_CHARACTERSET=AL32UTF8
+    ports:
+      - "${ORACLE_PORT:-1521}:1521"
+      - "5500:5500"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ./scripts:/docker-entrypoint-initdb.d/startup
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/${ORACLE_PWD:-oracle}@//localhost:1521/XE", "@/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - residuos-network
+
+  api:
+    build: .
+    container_name: gestao-residuos-api
+    depends_on:
+      oracle-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db:1521:XE
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-system}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-oracle}
+      - JWT_SECRET=${JWT_SECRET:-5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    restart: unless-stopped
+    networks:
+      - residuos-network
+
+volumes:
+  oracle-data:
+
+networks:
+  residuos-network:
+    driver: bridge

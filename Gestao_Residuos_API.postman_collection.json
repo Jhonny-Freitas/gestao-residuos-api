@@ -1,0 +1,650 @@
+{
+	"info": {
+		"_postman_id": "gestao-residuos-api-2024",
+		"name": "Gestão de Resíduos API - FIAP",
+		"description": "Collection completa da API RESTful de Gestão de Resíduos e Reciclagem",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 Autenticação",
+			"item": [
+				{
+					"name": "Login - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"    console.log(\"Token JWT salvo:\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@fiap.com.br\",\n  \"senha\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - User",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@fiap.com.br\",\n  \"senha\": \"user123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Novo Usuário",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"João Silva\",\n  \"email\": \"joao.silva@example.com\",\n  \"senha\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "♻️ Tipos de Resíduos",
+			"item": [
+				{
+					"name": "Listar Todos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/tipos-residuos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"tipos-residuos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/tipos-residuos/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"tipos-residuos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Tipo de Resíduo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Eletrônicos\",\n  \"descricao\": \"Resíduos eletrônicos como computadores e celulares\",\n  \"nivelImpacto\": \"ALTO\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/tipos-residuos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"tipos-residuos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Tipo de Resíduo",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Eletrônicos\",\n  \"descricao\": \"Resíduos eletrônicos perigosos\",\n  \"nivelImpacto\": \"ALTO\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/tipos-residuos/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"tipos-residuos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deletar Tipo de Resíduo",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/tipos-residuos/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"tipos-residuos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🗑️ Containers",
+			"item": [
+				{
+					"name": "Listar Todos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/containers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"containers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/containers/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"containers",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Containers Críticos (>80%)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/containers/criticos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"containers",
+								"criticos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Container",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idTipoResiduo\": 1,\n  \"localizacao\": \"Prédio A - Andar 2\",\n  \"capacidade\": 100.0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/containers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"containers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Container",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idTipoResiduo\": 1,\n  \"localizacao\": \"Prédio A - Andar 3\",\n  \"capacidade\": 120.0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/containers/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"containers",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deletar Container",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/containers/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"containers",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📦 Descartes",
+			"item": [
+				{
+					"name": "Listar Todos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/descartes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"descartes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Descartes Incorretos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/descartes/incorretos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"descartes",
+								"incorretos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Descarte",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idContainer\": 1,\n  \"idTipoResiduo\": 1,\n  \"peso\": 5.5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/descartes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"descartes"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🚛 Coletas",
+			"item": [
+				{
+					"name": "Listar Todas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/coletas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"coletas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Agendadas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/coletas/agendadas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"coletas",
+								"agendadas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Agendar Coleta",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idContainer\": 1,\n  \"dataAgendada\": \"2024-12-01T10:00:00\",\n  \"observacoes\": \"Container próximo da capacidade máxima\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/coletas/agendar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"coletas",
+								"agendar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"CONCLUIDA\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/coletas/1/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"coletas",
+								"1",
+								"status"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔔 Notificações",
+			"item": [
+				{
+					"name": "Listar Todas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/notificacoes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"notificacoes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Pendentes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/notificacoes/pendentes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"notificacoes",
+								"pendentes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Resolver Notificação",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/notificacoes/1/resolver",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"notificacoes",
+								"1",
+								"resolver"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📊 Relatórios",
+			"item": [
+				{
+					"name": "Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/relatorios/dashboard",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"relatorios",
+								"dashboard"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

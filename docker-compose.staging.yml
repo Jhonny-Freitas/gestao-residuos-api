@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  oracle-db-staging:
+    image: container-registry.oracle.com/database/express:21.3.0-xe
+    container_name: oracle-xe-staging
+    environment:
+      - ORACLE_PWD=${ORACLE_PWD_STAGING:-oracle_staging}
+      - ORACLE_CHARACTERSET=AL32UTF8
+    ports:
+      - "1522:1521"
+      - "5501:5500"
+    volumes:
+      - oracle-data-staging:/opt/oracle/oradata
+      - ./scripts:/docker-entrypoint-initdb.d/startup
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/${ORACLE_PWD_STAGING:-oracle_staging}@//localhost:1521/XE", "@/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - residuos-staging-network
+
+  api-staging:
+    build: .
+    container_name: gestao-residuos-api-staging
+    depends_on:
+      oracle-db-staging:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db-staging:1521:XE
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME_STAGING:-system}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD_STAGING:-oracle_staging}
+      - JWT_SECRET=${JWT_SECRET_STAGING:-staging_jwt_secret_key_fiap_2025_ok}
+      - JWT_EXPIRATION=86400000
+      - SPRING_PROFILES_ACTIVE=staging
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+    networks:
+      - residuos-staging-network
+
+volumes:
+  oracle-data-staging:
+
+networks:
+  residuos-staging-network:
+    driver: bridge
